@@ -3,6 +3,24 @@ import { supabase } from '../../services/supabase';
 import type { Vehicle } from '../../types';
 import { Plus, Edit2, Trash2, Search, X } from 'lucide-react';
 
+// Formata número como R$ 210,500.00 (vírgula como milhar, ponto como decimal)
+const formatBRL = (value: number): string => {
+  if (!value && value !== 0) return 'R$ 0.00';
+  return 'R$ ' + value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+};
+
+// Mascara o input: aceita somente dígitos e formata automaticamente
+const parseMaskedPrice = (maskedValue: string): number => {
+  const digits = maskedValue.replace(/[^0-9]/g, '');
+  return parseInt(digits || '0', 10) / 100;
+};
+
+const applyPriceMask = (maskedValue: string): string => {
+  const digits = maskedValue.replace(/[^0-9]/g, '');
+  const num = parseInt(digits || '0', 10) / 100;
+  return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+};
+
 const Inventory: React.FC = () => {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
@@ -30,6 +48,10 @@ const Inventory: React.FC = () => {
     is_promotion: false,
     discount_price: 0
   });
+  // Masked display strings for price inputs
+  const [priceDisplay, setPriceDisplay] = useState('0.00');
+  const [discountDisplay, setDiscountDisplay] = useState('0.00');
+
 
   useEffect(() => {
     fetchVehicles();
@@ -124,8 +146,12 @@ const Inventory: React.FC = () => {
       is_promotion: vehicle.is_promotion || false,
       discount_price: vehicle.discount_price || 0
     });
+    // Pre-load masked display values
+    setPriceDisplay(vehicle.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+    setDiscountDisplay((vehicle.discount_price || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
     setShowModal(true);
   };
+
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -195,7 +221,7 @@ const Inventory: React.FC = () => {
         <button 
           className="premium-button add-btn" 
           disabled={loading || saving}
-          onClick={() => { setEditingVehicle(null); setShowModal(true); }}
+          onClick={() => { setEditingVehicle(null); setPriceDisplay('0.00'); setDiscountDisplay('0.00'); setShowModal(true); }}
         >
           {saving ? 'Salvando...' : (
             <>
@@ -230,7 +256,7 @@ const Inventory: React.FC = () => {
                   </div>
                 </td>
                 <td>{v.year}</td>
-                <td>R$ {v.price.toLocaleString('pt-BR')}</td>
+                <td>{formatBRL(v.price)}</td>
                 <td>
                   <span className={`status-pill ${v.status}`}>{v.status}</span>
                 </td>
@@ -258,7 +284,7 @@ const Inventory: React.FC = () => {
                 <span className={`status-pill ${v.status}`}>{v.status}</span>
               </div>
               <div className="card-body">
-                <div className="card-price">R$ {v.price.toLocaleString('pt-BR')}</div>
+                <div className="card-price">{formatBRL(v.price)}</div>
                 <div className="card-actions">
                   <button onClick={() => openEdit(v)} className="mobile-action-btn edit">
                     <Edit2 size={16} /> Editar
@@ -295,8 +321,22 @@ const Inventory: React.FC = () => {
                   <input type="number" value={formData.year || ''} onChange={e => setFormData({...formData, year: parseInt(e.target.value) || 0})} required />
                 </div>
                 <div className="form-group">
-                  <label>Preço</label>
-                  <input type="number" value={formData.price || ''} onChange={e => setFormData({...formData, price: parseFloat(e.target.value) || 0})} required />
+                  <label>Preço <small style={{color:'#888',fontWeight:400}}>(ex: 210,500.00)</small></label>
+                  <div className="price-input-wrapper">
+                    <span className="price-prefix">R$</span>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={priceDisplay}
+                      onChange={e => {
+                        const masked = applyPriceMask(e.target.value);
+                        setPriceDisplay(masked);
+                        setFormData(prev => ({ ...prev, price: parseMaskedPrice(e.target.value) }));
+                      }}
+                      required
+                      placeholder="0.00"
+                    />
+                  </div>
                 </div>
                 <div className="form-group">
                   <label>Quilometragem</label>
@@ -393,8 +433,22 @@ const Inventory: React.FC = () => {
                 </div>
                 {formData.is_promotion && (
                   <div className="form-group">
-                    <label>Preço Promocional</label>
-                    <input type="number" value={formData.discount_price || ''} onChange={e => setFormData({...formData, discount_price: parseFloat(e.target.value) || 0})} required={formData.is_promotion} />
+                    <label>Preço Promocional <small style={{color:'#888',fontWeight:400}}>(ex: 185,000.00)</small></label>
+                    <div className="price-input-wrapper">
+                      <span className="price-prefix">R$</span>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        value={discountDisplay}
+                        onChange={e => {
+                          const masked = applyPriceMask(e.target.value);
+                          setDiscountDisplay(masked);
+                          setFormData(prev => ({ ...prev, discount_price: parseMaskedPrice(e.target.value) }));
+                        }}
+                        required={formData.is_promotion}
+                        placeholder="0.00"
+                      />
+                    </div>
                   </div>
                 )}
               </div>
@@ -857,6 +911,40 @@ const Inventory: React.FC = () => {
           background-position: right 1rem center;
           background-size: 1em;
           padding-right: 2.5rem !important;
+        }
+        /* Price input with R$ prefix */
+        .price-input-wrapper {
+          display: flex;
+          align-items: center;
+          border: 1.5px solid var(--color-gray-300);
+          border-radius: 8px;
+          overflow: hidden;
+          background: white;
+          transition: border-color 0.2s;
+        }
+        .price-input-wrapper:focus-within {
+          border-color: var(--color-gold);
+          box-shadow: 0 0 0 3px rgba(184,134,11,0.12);
+        }
+        .price-prefix {
+          padding: 0 0.75rem;
+          background: var(--color-gray-100);
+          color: var(--color-gray-600);
+          font-weight: 700;
+          font-size: 0.9rem;
+          border-right: 1.5px solid var(--color-gray-300);
+          height: 100%;
+          display: flex;
+          align-items: center;
+          white-space: nowrap;
+          user-select: none;
+        }
+        .price-input-wrapper input {
+          border: none !important;
+          box-shadow: none !important;
+          border-radius: 0 !important;
+          flex: 1;
+          min-width: 0;
         }
       `}</style>
     </div>

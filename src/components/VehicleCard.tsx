@@ -16,7 +16,7 @@ const SELLERS = [
 ];
 
 const formatPrice = (value: number) =>
-  value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  'R$ ' + value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 const VehicleCard: React.FC<VehicleCardProps> = ({ vehicle, isFavorite, onToggleFavorite }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
