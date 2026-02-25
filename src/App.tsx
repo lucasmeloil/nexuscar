@@ -93,6 +93,9 @@ function App() {
         <Route path="employees" element={profile?.role === 'admin' ? <Employees /> : <Navigate to="/admin/dashboard" />} />
         <Route path="reports" element={<Reports />} />
       </Route>
+
+      {/* Catch-all: redirect unknown routes to home */}
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }
