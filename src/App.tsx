@@ -29,46 +29,33 @@ function App() {
   useEffect(() => {
     let mounted = true;
 
-
-
-    const initializeAuth = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          const { data, error } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-          
-          if (mounted) {
-            if (error) console.error('Error fetching initial profile:', error);
-            else setProfile(data);
-          }
-        }
-      } catch (err) {
-        console.error('Auth init error:', err);
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    };
-
-    initializeAuth();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    // Uma única verificação inicial - rápida e sem conflito
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!mounted) return;
       if (session?.user) {
-        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
-          const { data } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-          if (mounted && data) setProfile(data);
-        }
+        const { data } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+        if (mounted && data) setProfile(data);
+      }
+      if (mounted) setLoading(false);
+    });
+
+    // Listener para mudanças de estado (login/logout em tempo real)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!mounted) return;
+      if (event === 'SIGNED_IN' && session?.user) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+        if (mounted && data) setProfile(data);
       } else if (event === 'SIGNED_OUT') {
         if (mounted) setProfile(null);
       }
-      if (mounted) setLoading(false);
     });
 
     return () => {

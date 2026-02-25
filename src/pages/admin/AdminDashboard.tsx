@@ -6,17 +6,13 @@ import {
   YAxis, 
   CartesianGrid, 
   Tooltip, 
-  ResponsiveContainer,
-  LineChart,
-  Line
+  ResponsiveContainer
 } from 'recharts';
 import { 
   TrendingUp, 
   Users, 
   Car, 
-  DollarSign,
-  ArrowUpRight,
-  ArrowDownRight
+  DollarSign
 } from 'lucide-react';
 import { supabase } from '../../services/supabase';
 
@@ -28,104 +24,54 @@ const AdminDashboard: React.FC = () => {
     totalEmployees: 0
   });
 
-  const [salesData] = useState([
-    { name: 'Jan', sales: 12 },
-    { name: 'Fev', sales: 19 },
-    { name: 'Mar', sales: 15 },
-    { name: 'Abr', sales: 22 },
-    { name: 'Mai', sales: 30 },
-    { name: 'Jun', sales: 25 },
-  ]);
-
-  const [revenueData] = useState([
-    { name: 'Semana 1', value: 400000 },
-    { name: 'Semana 2', value: 300000 },
-    { name: 'Semana 3', value: 600000 },
-    { name: 'Semana 4', value: 800000 },
-  ]);
-
-
+  // Gráficos exibem aviso enquanto não há dados reais
+  const emptyMonthlyData = [
+    { name: 'Jan', vendas: 0 },
+    { name: 'Fev', vendas: 0 },
+    { name: 'Mar', vendas: 0 },
+    { name: 'Abr', vendas: 0 },
+    { name: 'Mai', vendas: 0 },
+    { name: 'Jun', vendas: 0 },
+  ];
 
   useEffect(() => {
     fetchStats();
   }, []);
 
   const fetchStats = async () => {
-    // In a real app, these would come from the DB
-    const { count: vCount } = await supabase.from('vehicles').select('*', { count: 'exact', head: true }).eq('status', 'available');
-    const { count: pCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true }).in('role', ['admin', 'seller']);
-    
-    setStats({
-      totalSales: 45, // mock
-      totalRevenue: 3450000, // mock
-      activeInventory: vCount || 0,
-      totalEmployees: pCount || 0
-    });
+    try {
+      const [vehiclesRes, profilesRes, salesRes] = await Promise.all([
+        supabase.from('vehicles').select('*', { count: 'exact', head: true }).eq('status', 'available'),
+        supabase.from('profiles').select('*', { count: 'exact', head: true }).in('role', ['admin', 'seller']),
+        supabase.from('sales').select('price').eq('status', 'completed')
+      ]);
+
+      const soldVehicles = salesRes.data || [];
+      const totalRevenue = soldVehicles.reduce((sum: number, s: any) => sum + (s.price || 0), 0);
+
+      setStats({
+        totalSales: soldVehicles.length,
+        totalRevenue,
+        activeInventory: vehiclesRes.count || 0,
+        totalEmployees: profilesRes.count || 0
+      });
+    } catch (err) {
+      console.error('Erro ao carregar estatísticas:', err);
+    }
   };
 
-  const StatCard = ({ title, value, icon, color, trend }: any) => (
+  const StatCard = ({ title, value, icon, color, subtitle }: any) => (
     <div className="stat-card">
       <div className="stat-header">
         <div className="stat-icon" style={{ backgroundColor: `${color}15`, color: color }}>
           {icon}
         </div>
-        {trend && (
-          <span className={`stat-trend ${trend > 0 ? 'up' : 'down'}`}>
-            {trend > 0 ? <ArrowUpRight size={16} /> : <ArrowDownRight size={16} />}
-            {Math.abs(trend)}%
-          </span>
-        )}
       </div>
       <div className="stat-body">
         <span className="stat-value">{value}</span>
         <h3 className="stat-title">{title}</h3>
+        {subtitle && <span className="stat-subtitle">{subtitle}</span>}
       </div>
-      <style>{`
-        .stat-card {
-          background: white;
-          padding: 1.5rem;
-          border-radius: 12px;
-          box-shadow: var(--shadow-sm);
-          display: flex;
-          flex-direction: column;
-          gap: 1rem;
-        }
-        .stat-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-        }
-        .stat-icon {
-          width: 45px;
-          height: 45px;
-          border-radius: 10px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-        .stat-trend {
-          display: flex;
-          align-items: center;
-          gap: 2px;
-          font-size: 0.8rem;
-          font-weight: 700;
-          padding: 2px 8px;
-          border-radius: 20px;
-        }
-        .stat-trend.up { background: #dcfce7; color: #166534; }
-        .stat-trend.down { background: #fee2e2; color: #991b1b; }
-        .stat-value {
-          font-size: 1.75rem;
-          font-weight: 800;
-          color: var(--color-black);
-        }
-        .stat-title {
-          font-size: 0.85rem;
-          color: var(--color-gray-500);
-          text-transform: none;
-          margin: 0;
-        }
-      `}</style>
     </div>
   );
 
@@ -133,18 +79,18 @@ const AdminDashboard: React.FC = () => {
     <div className="dashboard-page">
       <div className="stats-grid">
         <StatCard 
-          title="Vendas Mensais" 
-          value={stats.totalSales} 
+          title="Vendas Realizadas" 
+          value={stats.totalSales === 0 ? '—' : stats.totalSales} 
           icon={<TrendingUp size={24} />} 
           color="#B8860B" 
-          trend={12.5}
+          subtitle={stats.totalSales === 0 ? 'Nenhuma venda registrada' : undefined}
         />
         <StatCard 
           title="Receita Total" 
-          value={`R$ ${(stats.totalRevenue / 1000000).toFixed(1)}M`} 
+          value={stats.totalRevenue === 0 ? '—' : `R$ ${(stats.totalRevenue / 1000000).toFixed(2)}M`} 
           icon={<DollarSign size={24} />} 
           color="#166534" 
-          trend={8.2}
+          subtitle={stats.totalRevenue === 0 ? 'Aguardando primeiras vendas' : undefined}
         />
         <StatCard 
           title="Veículos em Estoque" 
@@ -164,10 +110,13 @@ const AdminDashboard: React.FC = () => {
         <div className="chart-container main-chart">
           <div className="chart-header">
             <h3>Vendas por Mês</h3>
+            {stats.totalSales === 0 && (
+              <span className="chart-empty-badge">Sem dados ainda</span>
+            )}
           </div>
           <div style={{ height: '300px', width: '100%' }}>
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={salesData}>
+              <BarChart data={emptyMonthlyData}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <XAxis dataKey="name" />
                 <YAxis />
@@ -175,7 +124,7 @@ const AdminDashboard: React.FC = () => {
                   contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}
                   cursor={{ fill: 'rgba(184, 134, 11, 0.05)' }}
                 />
-                <Bar dataKey="sales" fill="var(--color-gold)" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="vendas" fill="var(--color-gold)" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -183,24 +132,11 @@ const AdminDashboard: React.FC = () => {
 
         <div className="chart-container">
           <div className="chart-header">
-            <h3>Receita Semanal</h3>
+            <h3>Desempenho de Vendedores</h3>
           </div>
-          <div style={{ height: '300px', width: '100%' }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={revenueData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Line 
-                  type="monotone" 
-                  dataKey="value" 
-                  stroke="var(--color-gold)" 
-                  strokeWidth={3} 
-                  dot={{ r: 6, fill: 'var(--color-gold)' }} 
-                />
-              </LineChart>
-            </ResponsiveContainer>
+          <div className="empty-state-chart">
+            <Users size={40} strokeWidth={1.5} />
+            <p>Comissões e rankings aparecerão<br />após as primeiras vendas.</p>
           </div>
         </div>
       </div>
@@ -214,24 +150,61 @@ const AdminDashboard: React.FC = () => {
 
         .stats-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+          grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
           gap: 1.5rem;
+        }
+
+        .stat-card {
+          background: white;
+          padding: 1.5rem;
+          border-radius: 12px;
+          box-shadow: var(--shadow-sm);
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+        }
+
+        .stat-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+
+        .stat-icon {
+          width: 45px;
+          height: 45px;
+          border-radius: 10px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .stat-value {
+          font-size: 1.75rem;
+          font-weight: 800;
+          color: var(--color-black);
+          display: block;
+        }
+
+        .stat-title {
+          font-size: 0.85rem;
+          color: var(--color-gray-500);
+          text-transform: none;
+          margin: 0;
+        }
+
+        .stat-subtitle {
+          font-size: 0.75rem;
+          color: #aaa;
+          font-style: italic;
+          margin-top: 2px;
+          display: block;
         }
 
         .charts-grid {
           display: grid;
           grid-template-columns: 2fr 1fr;
           gap: 1.5rem;
-        }
-
-        @media (max-width: 1024px) {
-          .charts-grid { grid-template-columns: 1fr; }
-        }
-
-        @media (max-width: 768px) {
-          .dashboard-page { gap: 1rem; }
-          .chart-container { padding: 1rem; }
-          .chart-header { margin-bottom: 1rem; }
         }
 
         .chart-container {
@@ -252,6 +225,42 @@ const AdminDashboard: React.FC = () => {
           font-size: 1rem;
           color: var(--color-black);
           text-transform: none;
+          margin: 0;
+        }
+
+        .chart-empty-badge {
+          font-size: 0.75rem;
+          background: #f3f4f6;
+          color: #6b7280;
+          padding: 2px 10px;
+          border-radius: 20px;
+        }
+
+        .empty-state-chart {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          height: 260px;
+          color: #ccc;
+          gap: 1rem;
+          text-align: center;
+        }
+
+        .empty-state-chart p {
+          font-size: 0.85rem;
+          color: #aaa;
+          line-height: 1.6;
+        }
+
+        @media (max-width: 1024px) {
+          .charts-grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 768px) {
+          .dashboard-page { gap: 1rem; }
+          .chart-container { padding: 1rem; }
+          .chart-header { margin-bottom: 1rem; }
         }
       `}</style>
     </div>

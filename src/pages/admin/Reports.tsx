@@ -1,27 +1,36 @@
 import React, { useState } from 'react';
-import { FileDown, TrendingUp, Package, Car } from 'lucide-react';
+import { FileDown, TrendingUp, Package, Users } from 'lucide-react';
 
 const Reports: React.FC = () => {
   const [reportType, setReportType] = useState('sales');
 
   const exportCSV = () => {
-    // Basic CSV export logic
-    const data = [
-      ['Data', 'Veículo', 'Vendedor', 'Preço'],
-      ['2024-05-10', 'BMW M3', 'Ricardo', '450.000'],
-      ['2024-05-12', 'Porsche 911', 'Ana', '1.200.000']
-    ];
-    
-    let csvContent = "data:text/csv;charset=utf-8," 
-      + data.map(e => e.join(",")).join("\n");
+    const headers = 
+      reportType === 'sales' ? ['Data', 'Veículo', 'Vendedor', 'Preço', 'Comissão'] :
+      reportType === 'stock' ? ['Veículo', 'Ano', 'Status', 'Preço', 'Dias em Estoque'] :
+      ['Vendedor', 'Vendas', 'Receita', 'Comissão'];
 
+    const csvContent = "data:text/csv;charset=utf-8," + headers.join(",");
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
     link.setAttribute("download", `relatorio_${reportType}.csv`);
     document.body.appendChild(link);
     link.click();
+    document.body.removeChild(link);
   };
+
+  const EmptyState = ({ message }: { message: string }) => (
+    <div className="report-empty-state">
+      <div className="empty-icon">
+        {reportType === 'sales' ? <TrendingUp size={48} strokeWidth={1} /> :
+         reportType === 'stock' ? <Package size={48} strokeWidth={1} /> :
+         <Users size={48} strokeWidth={1} />}
+      </div>
+      <h3>Nenhum dado disponível</h3>
+      <p>{message}</p>
+    </div>
+  );
 
   return (
     <div className="reports-page">
@@ -30,7 +39,7 @@ const Reports: React.FC = () => {
           className={reportType === 'sales' ? 'active' : ''} 
           onClick={() => setReportType('sales')}
         >
-          <TrendingUp size={18} /> Vendas e Lucros
+          <TrendingUp size={18} /> Vendas e Receita
         </button>
         <button 
           className={reportType === 'stock' ? 'active' : ''} 
@@ -42,53 +51,37 @@ const Reports: React.FC = () => {
           className={reportType === 'performance' ? 'active' : ''} 
           onClick={() => setReportType('performance')}
         >
-          <Car size={18} /> Desempenho de Vendedores
+          <Users size={18} /> Desempenho de Vendedores
         </button>
       </div>
 
       <div className="reports-main">
         <div className="report-header">
-          <h2>{reportType === 'sales' ? 'Relatório de Vendas' : reportType === 'stock' ? 'Relatório de Estoque' : 'Desempenho da Equipe'}</h2>
+          <div>
+            <h2>
+              {reportType === 'sales' ? 'Relatório de Vendas e Receita' : 
+               reportType === 'stock' ? 'Relatório de Estoque' : 
+               'Desempenho da Equipe de Vendas'}
+            </h2>
+            <p className="report-subtitle">Os dados serão exibidos conforme as vendas forem registradas no sistema.</p>
+          </div>
           <button className="premium-button" onClick={exportCSV}>
-            <FileDown size={20} /> Exportar Excel/CSV
+            <FileDown size={20} /> Exportar CSV
           </button>
         </div>
 
         <div className="report-content glass-card">
-          <table className="report-table">
-            <thead>
-              <tr>
-                <th>Período</th>
-                <th>Vendas</th>
-                <th>Receita</th>
-                <th>Custo Médio</th>
-                <th>Margem</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Maio 2024</td>
-                <td>12</td>
-                <td>R$ 4.500.000</td>
-                <td>R$ 3.800.000</td>
-                <td style={{ color: '#28a745' }}>15.5%</td>
-              </tr>
-              <tr>
-                <td>Abril 2024</td>
-                <td>10</td>
-                <td>R$ 3.200.000</td>
-                <td>R$ 2.700.000</td>
-                <td style={{ color: '#28a745' }}>15.6%</td>
-              </tr>
-              <tr>
-                <td>Março 2024</td>
-                <td>8</td>
-                <td>R$ 2.800.000</td>
-                <td>R$ 2.400.000</td>
-                <td style={{ color: '#28a745' }}>14.2%</td>
-              </tr>
-            </tbody>
-          </table>
+          {reportType === 'sales' && (
+            <EmptyState message="Nenhuma venda foi registrada ainda. Assim que uma venda for concluída, as receitas, margens e comissões aparecerão aqui automaticamente." />
+          )}
+
+          {reportType === 'stock' && (
+            <EmptyState message="Adicione veículos ao inventário para visualizar o relatório de estoque, giro de produtos e dias em carteira." />
+          )}
+
+          {reportType === 'performance' && (
+            <EmptyState message="As métricas de desempenho, comissões e ranking de vendedores serão exibidas após as primeiras vendas serem registradas." />
+          )}
         </div>
       </div>
 
@@ -103,17 +96,19 @@ const Reports: React.FC = () => {
           display: flex;
           flex-direction: column;
           gap: 0.5rem;
+          flex-shrink: 0;
         }
 
         .reports-sidebar button {
           display: flex;
           align-items: center;
-          gap: 1rem;
+          gap: 0.75rem;
           padding: 1rem;
           border-radius: 8px;
           color: var(--color-gray-600);
           font-weight: 600;
           text-align: left;
+          transition: all 0.2s;
         }
 
         .reports-sidebar button:hover { background: var(--color-gray-200); }
@@ -122,38 +117,68 @@ const Reports: React.FC = () => {
           color: var(--color-gold); 
         }
 
-        .reports-main { flex: 1; }
+        .reports-main { flex: 1; min-width: 0; }
 
         .report-header {
           display: flex;
           justify-content: space-between;
-          align-items: center;
+          align-items: flex-start;
           margin-bottom: 2rem;
+          gap: 1rem;
+        }
+
+        .report-header h2 {
+          font-size: 1.3rem;
+          margin: 0 0 0.25rem;
+          color: var(--color-black);
+        }
+
+        .report-subtitle {
+          font-size: 0.85rem;
+          color: #888;
+          margin: 0;
         }
 
         .report-content {
           background: white;
-          padding: 2rem;
+          padding: 3rem 2rem;
+          border-radius: 12px;
+          min-height: 350px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
         }
 
-        .report-table {
-          width: 100%;
-          border-collapse: collapse;
+        .report-empty-state {
+          text-align: center;
+          max-width: 380px;
+          color: #aaa;
         }
 
-        .report-table th {
-          text-align: left;
-          padding: 1rem;
-          border-bottom: 2px solid var(--color-gray-100);
-          color: var(--color-gray-500);
-          font-size: 0.8rem;
-          text-transform: uppercase;
+        .report-empty-state .empty-icon {
+          margin: 0 auto 1.5rem;
+          width: 80px;
+          height: 80px;
+          background: #f9f9f9;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #ddd;
         }
 
-        .report-table td {
-          padding: 1.25rem 1rem;
-          border-bottom: 1px solid var(--color-gray-100);
-          font-weight: 600;
+        .report-empty-state h3 {
+          font-size: 1.1rem;
+          color: #555;
+          margin: 0 0 0.75rem;
+          text-transform: none;
+        }
+
+        .report-empty-state p {
+          font-size: 0.875rem;
+          color: #aaa;
+          line-height: 1.7;
+          margin: 0;
         }
 
         @media (max-width: 768px) {
@@ -168,11 +193,9 @@ const Reports: React.FC = () => {
           .reports-sidebar::-webkit-scrollbar { display: none; }
           .reports-sidebar button { white-space: nowrap; padding: 0.75rem 1rem; font-size: 0.8rem; }
           .report-header { flex-direction: column; gap: 1rem; align-items: flex-start; }
-          .report-header h2 { font-size: 1.2rem; }
+          .report-header h2 { font-size: 1.1rem; }
           .report-header button { width: 100%; justify-content: center; }
-          .report-content { padding: 1rem; border-radius: 8px; overflow-x: auto; }
-          .report-table { font-size: 0.8rem; }
-          .report-table th, .report-table td { padding: 0.75rem 0.5rem; }
+          .report-content { padding: 2rem 1rem; border-radius: 8px; }
         }
       `}</style>
     </div>
