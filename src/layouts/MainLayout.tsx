@@ -1,6 +1,6 @@
 import React from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
-import { LogOut, Car, Home, Search, Heart, User, LayoutDashboard } from 'lucide-react';
+import { LogOut, Home, Search, Heart, User, LayoutDashboard } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { supabase } from '../services/supabase';
 import type { Profile } from '../types';
