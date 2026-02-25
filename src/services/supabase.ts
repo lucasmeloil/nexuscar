@@ -1,17 +1,20 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "";
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
+// Vite requer o prefixo VITE_ para expor variáveis ao cliente
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
+// Debug para o desenvolvedor (visível no console do navegador)
 if (!supabaseUrl || !supabaseAnonKey) {
   console.error(
-    "ATENÇÃO: As credenciais do Supabase não foram encontradas no ambiente (Netlify/Local). O site não conseguirá carregar os dados.",
+    "Critical Error: Supabase URL or Anon Key is missing. \n" +
+    "Check your Netlify Environment Variables or .env file. \n" +
+    "Variables must start with VITE_ to be bundled by Vite."
   );
 }
 
-// Usamos um fallback de string vazia para evitar erro de sintaxe, 
-// mas mostramos erro claro no console se faltar.
+// Inicialização segura
 export const supabase = createClient(
-  supabaseUrl || "https://placeholder-url.supabase.co", 
-  supabaseAnonKey || "placeholder-key"
+  supabaseUrl || "https://missing-url.supabase.co", 
+  supabaseAnonKey || "missing-key"
 );
