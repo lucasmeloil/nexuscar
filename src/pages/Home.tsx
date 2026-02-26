@@ -218,8 +218,7 @@ const Home: React.FC = () => {
         transition={{ duration: 0.8 }}
       >
         <div className="section-title-wrapper">
-          <div className="section-badge"><Award size={16} /> Destaques</div>
-          <h2 style={{ color: '#ffffff', textShadow: '2px 2px 0px #b8860b', fontWeight: 900 }}>VEÍCULOS EM DESTAQUE</h2>
+          <div className="section-badge"><Award size={24} /> Destaques</div>
           <div className="title-underline"></div>
           <p>A melhor seleção de carros premium para você</p>
         </div>
@@ -268,8 +267,7 @@ const Home: React.FC = () => {
         transition={{ duration: 0.8 }}
       >
         <div className="section-title-wrapper">
-          <div className="section-badge"><Zap size={16} /> Novidades</div>
-          <h2 style={{ color: '#000', textShadow: '2px 2px 0px #b8860b', fontWeight: 900 }}>VEICULOS RECEM CHEGADOS</h2>
+          <div className="section-badge"><Zap size={24} /> Novidades</div>
           <div className="title-underline"></div>
           <p>As últimas adições ao nosso estoque exclusivo</p>
         </div>
@@ -313,8 +311,7 @@ const Home: React.FC = () => {
       >
         <div className="promo-container">
           <div className="section-title-wrapper text-white">
-            <div className="section-badge promo"><Zap size={16} /> Ofertas</div>
-            <h2 className="text-white">Promoções Imperdíveis</h2>
+            <div className="section-badge promo"><Zap size={24} /> Ofertas</div>
             <div className="title-underline gold"></div>
             <p className="text-gray">Oportunidades únicas com preços reduzidos</p>
           </div>
@@ -679,21 +676,22 @@ const Home: React.FC = () => {
         .section-badge {
           display: inline-flex;
           align-items: center;
-          gap: 8px;
+          gap: 12px;
           background: var(--color-gray-100);
           color: var(--color-gold);
-          padding: 6px 16px;
-          border-radius: 20px;
-          font-size: 0.8rem;
-          font-weight: 800;
+          padding: 10px 24px;
+          border-radius: 50px;
+          font-size: 1.5rem;
+          font-weight: 900;
           text-transform: uppercase;
-          margin-bottom: 1rem;
+          margin-bottom: 1.5rem;
+          box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+          letter-spacing: 2px;
         }
         .section-badge.promo { background: rgba(220, 38, 38, 0.1); color: #dc2626; }
 
         .highlights-section h2, .promo-section h2, .catalog-section h2 {
-          font-size: 2.5rem;
-          margin-bottom: 1rem;
+          display: none;
         }
 
         .vehicles-grid, .promo-grid {
