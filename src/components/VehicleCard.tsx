@@ -64,11 +64,12 @@ const VehicleCard: React.FC<VehicleCardProps> = ({ vehicle, isFavorite, onToggle
                 key={currentImageIndex}
                 src={vehicle.images[currentImageIndex]}
                 alt={`${vehicle.make} ${vehicle.model}`}
+                loading="lazy" /* Only load visible images */
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                style={{ position: 'relative' }}
+                transition={{ duration: 0.25, ease: "linear" }}
+                style={{ position: 'relative', willChange: 'opacity' }}
               />
             ) : (
               <div className="no-image">Sem Foto</div>

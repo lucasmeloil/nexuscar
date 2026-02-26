@@ -927,6 +927,9 @@ const Home: React.FC = () => {
           gap: 2rem;
           padding: 0 1rem;
           animation: testimonial-marquee 40s linear infinite;
+          will-change: transform; /* Crucial for smooth animation */
+          backface-visibility: hidden; /* Prevent flicker in Safari/Chrome */
+          -webkit-backface-visibility: hidden;
         }
 
         .testimonials-slider-track:hover {
