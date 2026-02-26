@@ -135,7 +135,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({ profile }) => {
         .navbar {
           background-color: var(--color-black);
           color: var(--color-white);
-          padding: 1rem 0;
+          height: 80px;
+          display: flex;
+          align-items: center;
           position: fixed;
           top: 0;
           left: 0;
@@ -145,13 +147,15 @@ const MainLayout: React.FC<MainLayoutProps> = ({ profile }) => {
           box-shadow: 0 4px 20px rgba(0,0,0,0.5);
           backdrop-filter: blur(10px);
         }
+
         .navbar-container {
-          max-width: 1300px;
+          max-width: 1400px;
           margin: 0 auto;
+          width: 100%;
+          padding: 0 1.5rem;
           display: flex;
           justify-content: space-between;
           align-items: center;
-          padding: 0 1.5rem;
         }
         .logo {
           display: flex;
@@ -255,8 +259,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({ profile }) => {
         .login-link { font-weight: 700; color: white; }
 
         .content {
-          margin-top: 84px; /* Fixed navbar height */
-          min-height: calc(100vh - 84px);
+          margin-top: 80px; /* Matched to fixed 80px navbar height */
+          min-height: calc(100vh - 80px);
+          background-color: var(--color-black);
         }
 
         /* Mobile Bottom Nav */
