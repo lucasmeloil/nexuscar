@@ -8,7 +8,8 @@ import type { Profile } from './types';
 import MainLayout from './layouts/MainLayout';
 import AdminLayout from './layouts/AdminLayout.tsx';
 
-// Pages
+// Components
+import ScrollToTop from './components/ScrollToTop.tsx';
 import Home from './pages/Home.tsx';
 import VehicleDetails from './pages/VehicleDetails.tsx';
 import Login from './pages/Login.tsx';
@@ -152,7 +153,9 @@ function App() {
   }
 
   return (
-    <Routes>
+    <>
+      <ScrollToTop />
+      <Routes>
       {/* Public & Client Routes */}
       <Route element={<MainLayout profile={profile} />}>
         <Route path="/" element={<Home />} />
@@ -176,9 +179,9 @@ function App() {
         <Route path="reports" element={<Reports />} />
       </Route>
 
-      {/* Catch-all: redirect unknown routes to home */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </>
   );
 }
 
