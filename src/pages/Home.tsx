@@ -11,59 +11,47 @@ const Home: React.FC = () => {
   const [latestVehicles, setLatestVehicles] = useState<Vehicle[]>([]);
   const [promoVehicles, setPromoVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currentSlide, setCurrentSlide] = useState(0);
   const [favorites, setFavorites] = useState<string[]>([]);
   const [showWppChat, setShowWppChat] = useState(false);
+  const [customerName, setCustomerName] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
+  const [customerMessage, setCustomerMessage] = useState('');
   const navigate = useNavigate();
-
-  const slides = [
-    {
-      title: "Desperte sua Paixão",
-      subtitle: "Performance e Elegância em Cada Detalhe",
-      image: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=2000",
-      cta: "Ver Coleção"
-    },
-    {
-      title: "Luxo Sustentável",
-      subtitle: "A Nova Era da Mobilidade Elétrica Chegou",
-      image: "https://images.unsplash.com/photo-1560958089-b8a1929cea89?auto=format&fit=crop&q=80&w=2000",
-      cta: "Conhecer Modelos"
-    }
-  ];
 
   useEffect(() => {
     fetchData();
     fetchFavorites();
-
-    const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % slides.length);
-    }, 6000);
-    return () => clearInterval(timer);
   }, []);
 
   const fetchData = async () => {
     try {
       setLoading(true);
       
+      const initialTimeout = setTimeout(() => {
+        if (loading) setLoading(false);
+      }, 7000);
+
       const [featuredRes, latestRes, promoRes] = await Promise.all([
         supabase.from('vehicles').select('*').eq('is_featured', true).eq('status', 'available').limit(6),
         supabase.from('vehicles').select('*').eq('status', 'available').order('created_at', { ascending: false }).limit(3),
         supabase.from('vehicles').select('*').eq('is_promotion', true).eq('status', 'available').limit(3)
       ]);
 
+      clearTimeout(initialTimeout);
+
       if (featuredRes.error) console.error('Featured error:', featuredRes.error);
       if (latestRes.error) console.error('Latest error:', latestRes.error);
       if (promoRes.error) console.error('Promos error:', promoRes.error);
 
-      if (featuredRes.data && featuredRes.data.length > 0) {
-        setFeaturedVehicles(featuredRes.data);
-      } else {
+      if (featuredRes.data) setFeaturedVehicles(featuredRes.data);
+      if (latestRes.data) setLatestVehicles(latestRes.data);
+      if (promoRes.data) setPromoVehicles(promoRes.data);
+
+      if ((!featuredRes.data || featuredRes.data.length === 0) && !featuredRes.error) {
+        // Fallback if no featured
         const { data: fallback } = await supabase.from('vehicles').select('*').eq('status', 'available').limit(3);
         if (fallback) setFeaturedVehicles(fallback);
       }
-
-      if (latestRes.data) setLatestVehicles(latestRes.data);
-      if (promoRes.data) setPromoVehicles(promoRes.data);
     } catch (err) {
       console.error('Error fetching home data:', err);
     } finally {
@@ -102,66 +90,87 @@ const Home: React.FC = () => {
 
   return (
     <div className="home-container">
-      {/* Hero Slider */}
-      <section className="hero-slider">
-        <AnimatePresence mode="wait">
+      {/* Modern Hero Section - 2025 Style */}
+      <section className="hero-modern">
+        <div 
+          className="hero-bg-gradient"
+          style={{ 
+            backgroundImage: `linear-gradient(135deg, rgba(0,0,0,0.85) 0%, rgba(184, 134, 11, 0.15) 100%)`
+          }}
+        />
+        <div className="hero-content-container">
+          {/* Mascot (Top in Mobile) */}
           <motion.div 
-            key={currentSlide}
-            className="slide"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 1 }}
-            style={{ backgroundImage: `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.7)), url(${slides[currentSlide].image})` }}
+            className="hero-mascot-side"
+            initial={{ opacity: 0, scale: 0.8, y: 30 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 1, ease: "easeOut" }}
           >
-            <div className="hero-content">
-              <motion.h1 
-                initial={{ y: 30, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.2 }}
-              >
-                {slides[currentSlide].title}
-              </motion.h1>
-              <motion.p
-                initial={{ y: 30, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.4 }}
-              >
-                {slides[currentSlide].subtitle}
-              </motion.p>
-              
-
-
-              <motion.div
-                className="hero-actions"
-                initial={{ y: 30, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.7 }}
-              >
-                <button className="premium-button" onClick={() => navigate('/catalog')}>
-                  {slides[currentSlide].cta} <ChevronRight size={20} />
-                </button>
-              </motion.div>
+            <div className="mascot-wrapper">
+              <motion.img 
+                src="/mascote.png" 
+                alt="New Car Mascot" 
+                className="mascot-img"
+                animate={{ y: [0, -15, 0] }}
+                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+              />
+              <div className="mascot-shadow"></div>
             </div>
           </motion.div>
-        </AnimatePresence>
-        
-        <div className="slider-nav">
-          {slides.map((_, i) => (
-            <button 
-              key={i} 
-              className={`slide-indicator ${i === currentSlide ? 'active' : ''}`}
-              onClick={() => setCurrentSlide(i)}
-            />
-          ))}
+
+          {/* Text & Actions (Below in Mobile) */}
+          <motion.div 
+            className="hero-text-side"
+            initial={{ opacity: 0, x: -50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 1, delay: 0.2, ease: "easeOut" }}
+          >
+            <div className="hero-badge modern">CARRO NOVO 2025</div>
+            <motion.h1 
+              className="modern-hero-title"
+              style={{ 
+                color: '#ffffff',
+                fontWeight: 900,
+                textShadow: '3px 3px 0px #000000, 0 0 40px rgba(184, 134, 11, 0.4)',
+              }}
+            >
+              A LOJA DOS <span className="gold-text">AMIGOS</span>
+            </motion.h1>
+            <motion.p
+              className="modern-hero-p"
+              style={{ 
+                color: '#ffffff',
+                fontWeight: 600,
+                textShadow: '1px 1px 2px rgba(0,0,0,0.5)',
+              }}
+            >
+              Onde o negócio é transparente e a parceria é real. <br/>
+              O carro dos seus sonhos está aqui.
+            </motion.p>
+            <div className="hero-modern-actions">
+              <button className="premium-button glow large grow" onClick={() => navigate('/catalog')}>
+                Explorar Carros <ChevronRight size={22} strokeWidth={3} />
+              </button>
+              <button className="premium-button-outline white large grow" onClick={() => navigate('/contact')}>
+                Falar com Vendedor
+              </button>
+            </div>
+          </motion.div>
         </div>
       </section>
 
-      {/* Featured Section */}
-      <section className="highlights-section">
+      {/* Highlights Section */}
+      <motion.section 
+        className="highlights-section"
+        initial={{ opacity: 0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-100px" }}
+        transition={{ duration: 0.8 }}
+      >
         <div className="section-title-wrapper">
           <div className="section-badge"><Award size={16} /> Destaques</div>
           <h2>Veículos em Destaque</h2>
+          <div className="title-underline"></div>
           <p>A melhor seleção de carros premium para você</p>
         </div>
 
@@ -172,8 +181,16 @@ const Home: React.FC = () => {
         ) : featuredVehicles.length > 0 ? (
           <div className="vehicles-grid">
             <AnimatePresence>
-              {featuredVehicles.map((v) => (
-                <VehicleCard key={v.id} vehicle={v} isFavorite={favorites.includes(v.id)} onToggleFavorite={toggleFavorite} />
+              {featuredVehicles.map((v, idx) => (
+                <motion.div
+                  key={v.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.1 }}
+                  viewport={{ once: true }}
+                >
+                  <VehicleCard vehicle={v} isFavorite={favorites.includes(v.id)} onToggleFavorite={toggleFavorite} />
+                </motion.div>
               ))}
             </AnimatePresence>
           </div>
@@ -190,13 +207,20 @@ const Home: React.FC = () => {
             Ver Estoque Completo <ChevronRight size={18} />
           </button>
         </div>
-      </section>
+      </motion.section>
 
       {/* Latest Arrivals Section */}
-      <section className="highlights-section gray-bg">
+      <motion.section 
+        className="highlights-section gray-bg"
+        initial={{ opacity: 0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.8 }}
+      >
         <div className="section-title-wrapper">
           <div className="section-badge"><Zap size={16} /> Novidades</div>
           <h2>Recém Chegados</h2>
+          <div className="title-underline"></div>
           <p>As últimas adições ao nosso estoque exclusivo</p>
         </div>
 
@@ -207,8 +231,16 @@ const Home: React.FC = () => {
         ) : latestVehicles.length > 0 ? (
           <div className="vehicles-grid">
             <AnimatePresence>
-              {latestVehicles.map((v) => (
-                <VehicleCard key={v.id} vehicle={v} isFavorite={favorites.includes(v.id)} onToggleFavorite={toggleFavorite} />
+              {latestVehicles.map((v, idx) => (
+                <motion.div
+                  key={v.id}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: idx * 0.1 }}
+                  viewport={{ once: true }}
+                >
+                  <VehicleCard vehicle={v} isFavorite={favorites.includes(v.id)} onToggleFavorite={toggleFavorite} />
+                </motion.div>
               ))}
             </AnimatePresence>
           </div>
@@ -219,14 +251,21 @@ const Home: React.FC = () => {
             <button className="premium-button" onClick={() => fetchData()}>Atualizar Dados</button>
           </div>
         )}
-      </section>
+      </motion.section>
 
       {/* Promotions Section */}
-      <section className="promo-section dark-section">
+      <motion.section 
+        className="promo-section dark-section"
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true }}
+        transition={{ duration: 1 }}
+      >
         <div className="promo-container">
           <div className="section-title-wrapper text-white">
             <div className="section-badge promo"><Zap size={16} /> Ofertas</div>
             <h2 className="text-white">Promoções Imperdíveis</h2>
+            <div className="title-underline gold"></div>
             <p className="text-gray">Oportunidades únicas com preços reduzidos</p>
           </div>
 
@@ -235,8 +274,16 @@ const Home: React.FC = () => {
               [1,2,3].map(n => <div key={n} className="skeleton-card" />)
             ) : promoVehicles.length > 0 ? (
               <AnimatePresence>
-                {promoVehicles.map((v) => (
-                  <VehicleCard key={v.id} vehicle={v} isFavorite={favorites.includes(v.id)} onToggleFavorite={toggleFavorite} />
+                {promoVehicles.map((v, idx) => (
+                  <motion.div
+                    key={v.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.1 }}
+                    viewport={{ once: true }}
+                  >
+                    <VehicleCard vehicle={v} isFavorite={favorites.includes(v.id)} onToggleFavorite={toggleFavorite} />
+                  </motion.div>
                 ))}
               </AnimatePresence>
             ) : (
@@ -248,7 +295,7 @@ const Home: React.FC = () => {
             )}
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* Why Choose Us */}
       <section className="benefits-container">
@@ -261,7 +308,11 @@ const Home: React.FC = () => {
         >
           <motion.div 
             className="benefit-item glass-card hover-lift"
-            whileHover={{ y: -10 }}
+            whileHover={{ y: -15, scale: 1.02 }}
+            initial={{ opacity: 0, x: -30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2 }}
           >
             <div className="benefit-icon-wrapper">
               <Shield size={40} className="text-gold" />
@@ -272,7 +323,11 @@ const Home: React.FC = () => {
           
           <motion.div 
             className="benefit-item glass-card hover-lift"
-            whileHover={{ y: -10 }}
+            whileHover={{ y: -15, scale: 1.02 }}
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.4 }}
           >
             <div className="benefit-icon-wrapper">
               <Award size={40} className="text-gold" />
@@ -283,7 +338,11 @@ const Home: React.FC = () => {
           
           <motion.div 
             className="benefit-item glass-card hover-lift"
-            whileHover={{ y: -10 }}
+            whileHover={{ y: -15, scale: 1.02 }}
+            initial={{ opacity: 0, x: 30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.6 }}
           >
             <div className="benefit-icon-wrapper">
               <Zap size={40} className="text-gold" />
@@ -297,74 +356,269 @@ const Home: React.FC = () => {
 
 
       <style>{`
-        .home-container {
-          overflow-x: hidden;
+        .hero-badge {
+          display: inline-block;
+          background: rgba(184, 134, 11, 0.2);
+          border: 1px solid var(--color-gold);
+          color: var(--color-gold);
+          padding: 6px 16px;
+          border-radius: 50px;
+          font-size: 0.85rem;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 2px;
+          margin-bottom: 1.5rem;
         }
 
-        .hero-slider {
-          height: 600px;
-          position: relative;
-          background: #000;
-          margin-bottom: 4rem;
-        }
-
-        .slide {
-          position: absolute;
-          top: 0;
-          left: 0;
+        .hero-modern {
+          min-height: calc(100vh - 84px);
           width: 100%;
-          height: 100%;
-          background-size: cover;
-          background-position: center;
+          position: relative;
           display: flex;
           align-items: center;
           justify-content: center;
-          text-align: center;
-          color: white;
-          padding: 2rem;
+          overflow: hidden;
+          background-color: #000; /* Pure Black Background */
+          padding: 2rem 0;
         }
 
-        .hero-content h1 {
-          font-size: clamp(2.5rem, 8vw, 4.5rem);
-          margin-bottom: 1.5rem;
-          color: var(--color-white);
-        }
-
-        .hero-content p {
-          font-size: 1.25rem;
-          margin-bottom: 2.5rem;
-          color: var(--color-gray-200);
-          max-width: 600px;
-          margin-left: auto;
-          margin-right: auto;
-        }
-
-        .slider-nav {
+        .hero-bg-gradient {
           position: absolute;
-          bottom: 30px;
+          inset: 0;
+          background: radial-gradient(circle at center, rgba(184, 134, 11, 0.05) 0%, rgba(0,0,0,1) 100%);
+          z-index: 1;
+        }
+
+        .hero-content-container {
+          position: relative;
+          z-index: 2;
+          width: 100%;
+          max-width: 1300px;
+          padding: 0 1.5rem;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 4rem;
+        }
+
+        .hero-text-side {
+          flex: 1.2;
+          text-align: left;
+        }
+
+        .hero-badge.modern {
+          background: rgba(184, 134, 11, 0.2);
+          border: 1px solid var(--color-gold);
+          color: var(--color-gold);
+          padding: 0.5rem 1.5rem;
+          border-radius: 50px;
+          display: inline-block;
+          font-weight: 800;
+          font-size: 0.8rem;
+          letter-spacing: 2px;
+          margin-bottom: 2rem;
+        }
+
+        .modern-hero-title {
+          font-size: clamp(3rem, 6vw, 5.5rem);
+          line-height: 1.1;
+          margin-bottom: 1.5rem;
+          white-space: pre-line;
+        }
+
+        .gold-text {
+          color: var(--color-gold);
+          text-shadow: 0 0 30px rgba(184, 134, 11, 0.4);
+        }
+
+        .modern-hero-p {
+          font-size: 1.3rem;
+          line-height: 1.6;
+          margin-bottom: 3.5rem;
+          opacity: 0.95;
+        }
+
+        .hero-modern-actions {
+          display: flex;
+          gap: 1.5rem;
+        }
+
+        .hero-mascot-side {
+          flex: 1;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        }
+
+        .mascot-wrapper {
+          position: relative;
+          width: 100%;
+          max-width: 550px;
+          background: #000; /* Black background for mascot focus */
+          border-radius: 50%;
+          padding: 20px;
+        }
+
+        .mascot-img {
+          width: 100%;
+          height: auto;
+          filter: drop-shadow(0 0 30px rgba(255,255,255,0.1));
+          z-index: 2;
+          position: relative;
+        }
+
+        .mascot-shadow {
+          position: absolute;
+          bottom: -20px;
           left: 50%;
           transform: translateX(-50%);
+          width: 60%;
+          height: 30px;
+          background: radial-gradient(ellipse at center, rgba(184, 134, 11, 0.2) 0%, transparent 70%);
+          z-index: 1;
+        }
+
+        @media (max-width: 1024px) {
+          .hero-modern {
+            height: calc(100vh - 80px);
+            padding: 1rem 0;
+            display: flex;
+            align-items: center;
+          }
+          .hero-content-container {
+            flex-direction: column;
+            text-align: center;
+            gap: 1rem;
+            padding-top: 0;
+            justify-content: center;
+            height: 100%;
+          }
+          .hero-mascot-side {
+            order: 1;
+            width: 100%;
+            max-width: 16rem;
+            margin-bottom: 0.5rem;
+          }
+          .hero-text-side {
+            order: 2;
+            text-align: center;
+            width: 100%;
+            padding: 0 1rem;
+          }
+          .modern-hero-title {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+          }
+          .modern-hero-p {
+            display: none;
+          }
+          .hero-modern-actions {
+            flex-direction: column;
+            gap: 0.75rem;
+            width: 100%;
+            align-items: center;
+          }
+          .hero-badge.modern {
+            margin-bottom: 1rem;
+            padding: 0.4rem 1.2rem;
+          }
+          .premium-button.large, .premium-button-outline.large {
+            width: 100%;
+            max-width: 320px;
+            padding: 1rem;
+            font-size: 1rem;
+          }
+        }
+
+        @media (max-width: 380px) {
+          .hero-mascot-side {
+            max-width: 12rem;
+          }
+          .modern-hero-title {
+            font-size: 1.7rem;
+          }
+        }
+
+        .hero-actions {
           display: flex;
-          gap: 15px;
-          z-index: 10;
+          gap: 2rem;
+          justify-content: center;
+          margin-top: 1rem;
         }
 
-        .slide-indicator {
-          width: 40px;
-          height: 4px;
-          background: rgba(255,255,255,0.3);
-          border-radius: 2px;
-          transition: var(--transition-normal);
+        .premium-button.grow, .premium-button-outline.large {
+           transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .premium-button.grow:hover { transform: scale(1.05) translateY(-5px); }
+
+        .premium-button.glow.large {
+          padding: 1.25rem 3rem;
+          font-size: 1.1rem;
         }
 
-        .slide-indicator.active {
+        .premium-button-outline.white.large {
+          padding: 1.25rem 3rem;
+          font-size: 1.1rem;
+          border-color: white;
+          color: white;
+        }
+
+        .premium-button-outline.white.large:hover {
+          background: white;
+          color: black;
+        }
+
+          .glass-hero {
+            padding: 3rem 1.5rem;
+            margin: 0 1rem;
+            border-radius: 24px;
+          }
+          .hero-slider h1 {
+            font-size: 2.5rem !important;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+          }
+          .hero-slider p {
+            font-size: 1.1rem !important;
+            margin-bottom: 2rem !important;
+          }
+          .hero-actions {
+            flex-direction: column;
+            gap: 1rem;
+            width: 100%;
+          }
+          .premium-button.large, .premium-button-outline.large {
+            width: 100%;
+            padding: 1.1rem;
+          }
+        }
+
+        .title-underline {
+          width: 80px;
+          height: 3px;
           background: var(--color-gold);
-          width: 60px;
+          margin: 1.5rem auto;
+          position: relative;
         }
+
+        .title-underline::after {
+          content: "";
+          position: absolute;
+          width: 10px;
+          height: 10px;
+          background: var(--color-gold);
+          border-radius: 50%;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          box-shadow: 0 0 10px var(--color-gold);
+        }
+
+        .title-underline.gold { background: var(--color-gold); }
 
         .highlights-section, .promo-section, .catalog-section, .benefits {
           max-width: 1300px;
-          margin: 0 auto 6rem;
+          margin: 0 auto 8rem;
           padding: 0 1.5rem;
         }
 
@@ -517,37 +771,77 @@ const Home: React.FC = () => {
           {showWppChat && (
             <motion.div
               className="wpp-chat-box"
-              initial={{ opacity: 0, scale: 0.8, y: 20 }}
+              initial={{ opacity: 0, scale: 0.8, y: 20, transformOrigin: 'bottom right' }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.8, y: 20 }}
             >
               <div className="wpp-chat-header">
-                <div className="wpp-chat-avatar">N</div>
-                <div>
-                  <strong>NexusCar</strong>
-                  <span>Geralmente responde em minutos</span>
+                <div className="wpp-chat-profile">
+                  <div className="wpp-chat-avatar">
+                    <img src="/logo.png" alt="NEW CAR" />
+                    <span className="wpp-online-dot"></span>
+                  </div>
+                  <div className="wpp-chat-identity">
+                    <strong>Suporte NEW CAR</strong>
+                    <span>Online agora</span>
+                  </div>
                 </div>
                 <button className="wpp-chat-close" onClick={() => setShowWppChat(false)}>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="18" height="18"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="20" height="20" strokeWidth="2.5"><path d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
               </div>
               <div className="wpp-chat-body">
                 <div className="wpp-bubble">
-                  <p>👋 Olá! Bem-vindo à <strong>NexusCar</strong>!</p>
-                  <p>Estamos prontos para te ajudar a encontrar o carro ideal. Clique abaixo para iniciar uma conversa no WhatsApp com nossa equipe!</p>
-                  <span className="wpp-time">Agora</span>
+                  <p>Olá! 👋</p>
+                  <p>Por favor, preencha seus dados para agilizar seu atendimento:</p>
+                </div>
+
+                <div className="wpp-form">
+                  <div className="wpp-input-group">
+                    <input 
+                      type="text" 
+                      placeholder="Seu nome" 
+                      value={customerName}
+                      onChange={(e) => setCustomerName(e.target.value)}
+                      className="wpp-field"
+                    />
+                  </div>
+                  <div className="wpp-input-group">
+                    <input 
+                      type="tel" 
+                      placeholder="Seu telefone" 
+                      value={customerPhone}
+                      onChange={(e) => setCustomerPhone(e.target.value)}
+                      className="wpp-field"
+                    />
+                  </div>
+                  <div className="wpp-input-group">
+                    <textarea 
+                      placeholder="Qual veículo você tem interesse?" 
+                      value={customerMessage}
+                      onChange={(e) => setCustomerMessage(e.target.value)}
+                      className="wpp-field wpp-textarea"
+                      rows={2}
+                    />
+                  </div>
                 </div>
               </div>
               <a
-                href={`https://wa.me/5579999885599?text=${encodeURIComponent('Olá! Vim pelo site da NexusCar e gostaria de saber mais sobre os veículos disponíveis.')}`}
+                href={`https://wa.me/5579999885599?text=${encodeURIComponent(`Olá! Meu nome é ${customerName}, telefone ${customerPhone}. Tenho interesse em: ${customerMessage}`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="wpp-chat-cta"
+                className={`wpp-chat-cta ${(!customerName || !customerPhone) ? 'disabled' : ''}`}
+                onClick={(e) => {
+                  if (!customerName || !customerPhone) {
+                    e.preventDefault();
+                    alert('Por favor, preencha seu nome e telefone.');
+                  }
+                }}
               >
-                <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22">
                   <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
                 </svg>
-                Iniciar conversa no WhatsApp
+                Enviar Mensagem
               </a>
             </motion.div>
           )}
@@ -579,6 +873,14 @@ const Home: React.FC = () => {
           align-items: flex-end;
           gap: 1rem;
         }
+
+        @media (max-width: 1023px) {
+          .wpp-float-wrapper {
+            bottom: calc(70px + 1rem);
+            right: 1.5rem;
+          }
+        }
+        
         .wpp-float-btn {
           width: 60px; height: 60px;
           border-radius: 50%;
@@ -602,68 +904,153 @@ const Home: React.FC = () => {
           75%, 100% { transform: scale(1.7); opacity: 0; }
         }
         .wpp-chat-box {
-          background: white;
+          background: #ffffff;
           border-radius: 16px;
           width: 300px;
-          box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+          box-shadow: 0 12px 48px rgba(0,0,0,0.25);
           overflow: hidden;
+          margin-bottom: 0.5rem;
         }
+
+        @media (max-width: 480px) {
+          .wpp-chat-box { width: calc(100vw - 2.5rem); }
+        }
+
         .wpp-chat-header {
           background: #075E54;
           padding: 1rem;
           display: flex;
           align-items: center;
-          gap: 0.75rem;
+          justify-content: space-between;
           color: white;
         }
+
+        .wpp-chat-profile { display: flex; align-items: center; gap: 1rem; }
+
         .wpp-chat-avatar {
-          width: 40px; height: 40px;
+          width: 48px; height: 48px;
           border-radius: 50%;
-          background: #25D366;
-          display: flex; align-items: center; justify-content: center;
-          font-weight: 800;
-          font-size: 1.1rem;
-          flex-shrink: 0;
-        }
-        .wpp-chat-header div { flex: 1; }
-        .wpp-chat-header strong { display: block; font-size: 0.95rem; }
-        .wpp-chat-header span { font-size: 0.75rem; opacity: 0.8; }
-        .wpp-chat-close {
-          background: none;
-          color: rgba(255,255,255,0.7);
+          background: #ffffff;
           padding: 4px;
+          display: flex; align-items: center; justify-content: center;
+          position: relative;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .wpp-chat-avatar img { width: 100%; height: auto; object-fit: contain; }
+
+        .wpp-online-dot {
+          position: absolute;
+          bottom: 2px;
+          right: 2px;
+          width: 12px;
+          height: 12px;
+          background: #25D366;
+          border: 2px solid #075E54;
+          border-radius: 50%;
+        }
+
+        .wpp-chat-identity strong { 
+          display: block; 
+          font-size: 1rem; 
+          font-weight: 700;
+          line-height: 1.2;
+        }
+
+        .wpp-chat-identity span { font-size: 0.8rem; opacity: 0.85; }
+
+        .wpp-chat-close {
+          background: rgba(255,255,255,0.1);
+          color: white;
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
           cursor: pointer;
           border: none;
         }
+
         .wpp-chat-body {
           padding: 1rem;
-          background: #ECE5DD;
-        }
-        .wpp-bubble {
-          background: white;
-          border-radius: 0 12px 12px 12px;
-          padding: 0.875rem 1rem;
-          max-width: 90%;
-          box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+          background: #E5DDD5;
           position: relative;
         }
-        .wpp-bubble p { font-size: 0.875rem; color: #333; line-height: 1.5; margin: 0 0 0.25rem; }
-        .wpp-bubble p:last-of-type { margin-bottom: 0.5rem; }
-        .wpp-time { font-size: 0.7rem; color: #999; float: right; margin-top: 4px; }
+
+        .wpp-form {
+          margin-top: 1rem;
+          display: flex;
+          flex-direction: column;
+          gap: 0.75rem;
+          position: relative;
+          z-index: 2;
+        }
+
+        .wpp-input-group {
+          width: 100%;
+        }
+
+        .wpp-field {
+          width: 100%;
+          padding: 0.75rem 1rem;
+          border-radius: 12px;
+          border: 1px solid rgba(0,0,0,0.1);
+          font-size: 0.9rem;
+          outline: none;
+          transition: border-color 0.2s;
+          background: white;
+        }
+
+        .wpp-field:focus {
+          border-color: #25D366;
+        }
+
+        .wpp-textarea {
+          resize: none;
+          font-family: inherit;
+        }
+
+        .wpp-bubble {
+          background: white;
+          border-radius: 0 16px 16px 16px;
+          padding: 1rem;
+          max-width: 95%;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+          position: relative;
+          z-index: 1;
+        }
+
+        .wpp-bubble p { font-size: 0.9rem; color: #303030; line-height: 1.5; margin: 0 0 0.5rem; }
+        .wpp-bubble p:last-of-type { margin-bottom: 0px; }
+
         .wpp-chat-cta {
           display: flex;
           align-items: center;
           justify-content: center;
-          gap: 0.5rem;
-          padding: 1rem;
+          gap: 0.75rem;
+          padding: 1.25rem;
           background: #25D366;
-          color: white;
+          color: white !important;
           font-weight: 700;
-          font-size: 0.85rem;
+          font-size: 1rem;
           text-decoration: none;
-          transition: background 0.2s;
+          transition: all 0.2s ease;
+          border: none;
+          width: 100%;
+          cursor: pointer;
         }
-        .wpp-chat-cta:hover { background: #1ebe5d; }
+
+        .wpp-chat-cta.disabled {
+          background: #ccc;
+          cursor: not-allowed;
+          opacity: 0.8;
+        }
+
+        .wpp-chat-cta:not(.disabled):hover { 
+          background: #1ebe5d;
+          gap: 1rem;
+        }
       `}</style>
     </div>
   );

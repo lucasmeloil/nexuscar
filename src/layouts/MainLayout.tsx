@@ -1,6 +1,6 @@
 import React from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
-import { LogOut, Home, Search, Heart, User, LayoutDashboard } from 'lucide-react';
+import { LogOut, Home, Search, User, LayoutDashboard, MessageCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { supabase } from '../services/supabase';
 import type { Profile } from '../types';
@@ -21,7 +21,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ profile }) => {
   const menuItems = [
     { path: '/', icon: <Home size={24} />, label: 'Início' },
     { path: '/catalog', icon: <Search size={24} />, label: 'Estoque' },
-    { path: '/favorites', icon: <Heart size={24} />, label: 'Favoritos' },
+    { path: '/contact', icon: <MessageCircle size={24} />, label: 'Contato' },
     { 
       path: profile ? ((profile.role === 'admin' || profile.role === 'seller') ? '/admin' : '/profile') : '/login', 
       icon: (profile?.role === 'admin' || profile?.role === 'seller') ? <LayoutDashboard size={24} /> : <User size={24} />, 
@@ -42,6 +42,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ profile }) => {
           <nav className="desktop-nav">
             <Link to="/" className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}>Início</Link>
             <Link to="/catalog" className={`nav-link ${location.pathname === '/catalog' ? 'active' : ''}`}>Estoque</Link>
+            <Link to="/contact" className={`nav-link ${location.pathname === '/contact' ? 'active' : ''}`}>Contato</Link>
             {profile && (
               <>
                 <Link to="/favorites" className={`nav-link ${location.pathname === '/favorites' ? 'active' : ''}`}>Favoritos</Link>
@@ -113,14 +114,16 @@ const MainLayout: React.FC<MainLayoutProps> = ({ profile }) => {
           <div className="footer-links">
             <h4>Navegação</h4>
             <Link to="/">Início</Link>
+            <Link to="/contact">Contato</Link>
             <Link to="/favorites">Favoritos</Link>
             <Link to="/profile">Minha Conta</Link>
           </div>
           <div className="footer-contact">
             <h4>Contato</h4>
             <p>contato@newcar.com</p>
-            <p>(11) 99999-9999</p>
-            <p>São Paulo, SP - Brasil</p>
+            <p>(79) 99988-5599</p>
+            <p>BR-235, 52km, Av. Alípio Tavares de Menezes</p>
+            <p>Oviêdo Teixeira, Itabaiana - SE, 49507-640</p>
           </div>
         </div>
         <div className="footer-bottom">
