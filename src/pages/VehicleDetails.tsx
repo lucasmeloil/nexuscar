@@ -70,15 +70,16 @@ const VehicleDetails: React.FC = () => {
         {/* Gallery Section */}
         <div className="gallery-section">
           <div className="main-image-wrapper">
-            <AnimatePresence mode="wait">
+            <AnimatePresence mode="popLayout">
               <motion.img 
                 key={currentImageIndex}
                 src={vehicle.images[currentImageIndex]} 
                 alt={`${vehicle.make} ${vehicle.model}`}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.4 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                style={{ position: 'relative' }}
               />
             </AnimatePresence>
             

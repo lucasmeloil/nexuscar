@@ -51,13 +51,14 @@ const VehicleCard: React.FC<VehicleCardProps> = ({ vehicle, isFavorite, onToggle
       <motion.div
         className="vehicle-card"
         whileHover={{ y: -8 }}
-        initial={{ opacity: 0, scale: 0.95 }}
-        whileInView={{ opacity: 1, scale: 1 }}
-        viewport={{ once: true }}
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true, margin: "50px" }}
+        transition={{ duration: 0.4 }}
         onClick={() => navigate(`/vehicle/${vehicle.id}`)}
       >
         <div className="card-image-container">
-          <AnimatePresence mode="wait">
+          <AnimatePresence mode="popLayout">
             {vehicle.images && vehicle.images.length > 0 ? (
               <motion.img
                 key={currentImageIndex}
@@ -66,7 +67,8 @@ const VehicleCard: React.FC<VehicleCardProps> = ({ vehicle, isFavorite, onToggle
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 0.3 }}
+                transition={{ duration: 0.2 }}
+                style={{ position: 'relative' }}
               />
             ) : (
               <div className="no-image">Sem Foto</div>

@@ -153,6 +153,56 @@ const Inventory: React.FC = () => {
   };
 
 
+  // Simple client-side compression to make mobile uploads reliable
+  const compressImage = async (file: File): Promise<Blob | File> => {
+    // skip non-images
+    if (!file.type.startsWith('image/')) return file;
+    
+    // Skip if file is small enough (< 500kb)
+    if (file.size < 500 * 1024) return file;
+
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target?.result as string;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const MAX_WIDTH = 1200;
+          const MAX_HEIGHT = 1200;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height *= MAX_WIDTH / width;
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width *= MAX_HEIGHT / height;
+              height = MAX_HEIGHT;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, width, height);
+          
+          canvas.toBlob((blob) => {
+            if (blob) {
+              resolve(new File([blob], file.name, { type: 'image/jpeg' }));
+            } else {
+              resolve(file);
+            }
+          }, 'image/jpeg', 0.7); // 70% quality
+        };
+      };
+    });
+  };
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -161,13 +211,17 @@ const Inventory: React.FC = () => {
     
     try {
       const uploadPromises = Array.from(files).map(async (file) => {
+        // Compress before upload
+        const compressedFile = await compressImage(file);
+        
+        const timestamp = Date.now();
         const fileExt = file.name.split('.').pop();
-        const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
+        const fileName = `${timestamp}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
         const filePath = `${fileName}`;
 
         const { data, error } = await supabase.storage
           .from('vehicles')
-          .upload(filePath, file);
+          .upload(filePath, compressedFile);
 
         if (error) throw error;
 
@@ -189,16 +243,17 @@ const Inventory: React.FC = () => {
       }));
     } catch (err: any) {
       console.error('Error uploading images:', err);
-      alert('Erro ao enviar imagens: ' + err.message);
+      alert('Erro ao enviar imagens: Verifique sua conexão ou se o arquivo é muito grande. ' + err.message);
     } finally {
       setUploading(false);
+      // Clear input so same file can be selected again
+      e.target.value = '';
     }
   };
 
   const addImageUrl = () => {
     let url = prompt('Cole a URL da imagem:');
     if (url) {
-      // Basic sanitization if user pastes HTML snippet from IBB or similar
       if (url.includes('<img') || url.includes('src=')) {
         const match = url.match(/src=["']([^"']+)["']/);
         if (match && match[1]) {
