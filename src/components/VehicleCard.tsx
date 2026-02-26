@@ -204,21 +204,27 @@ const VehicleCard: React.FC<VehicleCardProps> = ({ vehicle, isFavorite, onToggle
 
       <style>{`
         .vehicle-card {
-          background: var(--color-white);
+          background: #ffffff;
           border-radius: 12px;
           overflow: hidden;
-          box-shadow: var(--shadow-md);
+          box-shadow: 0 10px 25px rgba(0,0,0,0.08);
           cursor: pointer;
-          border: 1px solid var(--color-gray-200);
+          border: 1px solid #eef0f2;
           display: flex;
           flex-direction: column;
           position: relative;
+          transition: all 0.3s ease;
+        }
+        .vehicle-card:hover {
+          transform: translateY(-8px);
+          box-shadow: 0 20px 40px rgba(0,0,0,0.12);
+          border-color: var(--color-gold);
         }
 
         .card-image-container {
           position: relative;
           height: 220px;
-          background: var(--color-gray-900);
+          background: #f8f9fa;
         }
         .card-image-container img {
           width: 100%;
@@ -231,13 +237,13 @@ const VehicleCard: React.FC<VehicleCardProps> = ({ vehicle, isFavorite, onToggle
           top: 0; left: 0;
           background: #dc2626;
           color: white;
-          padding: 4px 12px;
-          font-size: 0.7rem;
-          font-weight: 800;
+          padding: 6px 14px;
+          font-size: 0.75rem;
+          font-weight: 900;
           text-transform: uppercase;
           z-index: 10;
           border-bottom-right-radius: 12px;
-          box-shadow: 2px 2px 10px rgba(0,0,0,0.3);
+          box-shadow: 2px 2px 8px rgba(0,0,0,0.2);
         }
 
         .image-controls {
@@ -253,14 +259,14 @@ const VehicleCard: React.FC<VehicleCardProps> = ({ vehicle, isFavorite, onToggle
         .vehicle-card:hover .image-controls { opacity: 1; }
 
         .nav-btn {
-          background: rgba(0,0,0,0.4);
-          backdrop-filter: blur(4px);
-          color: white;
+          background: rgba(255,255,255,0.9);
+          color: #111;
           width: 32px; height: 32px;
           border-radius: 50%;
           display: flex; align-items: center; justify-content: center;
+          box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
-        .nav-btn:hover { background: var(--color-gold); }
+        .nav-btn:hover { background: var(--color-gold); color: white; }
 
         .image-dots {
           position: absolute;
@@ -271,7 +277,8 @@ const VehicleCard: React.FC<VehicleCardProps> = ({ vehicle, isFavorite, onToggle
         .dot {
           width: 6px; height: 6px;
           border-radius: 50%;
-          background: rgba(255,255,255,0.4);
+          background: rgba(255,255,255,0.5);
+          border: 1px solid rgba(0,0,0,0.1);
         }
         .dot.active {
           background: var(--color-gold);
@@ -281,34 +288,39 @@ const VehicleCard: React.FC<VehicleCardProps> = ({ vehicle, isFavorite, onToggle
         .status-badge {
           position: absolute;
           top: 10px; right: 45px;
-          padding: 4px 10px;
-          border-radius: 4px;
+          padding: 6px 12px;
+          border-radius: 6px;
           font-size: 0.7rem;
-          font-weight: 800;
+          font-weight: 900;
           text-transform: uppercase;
-          backdrop-filter: blur(4px);
-          background: rgba(0,0,0,0.6);
+          background: rgba(0,0,0,0.8);
           color: white;
+          z-index: 10;
         }
-        .status-badge.available { border-left: 3px solid #28a745; }
-        .status-badge.reserved { border-left: 3px solid #ffc107; }
-        .status-badge.sold { border-left: 3px solid #dc3545; }
+        .status-badge.available { border-left: 4px solid #28a745; }
+        .status-badge.reserved { border-left: 4px solid #ffc107; }
+        .status-badge.sold { border-left: 4px solid #dc3545; }
 
         .favorite-btn {
           position: absolute;
           top: 10px; right: 10px;
-          background: rgba(255,255,255,0.9);
-          padding: 6px; border-radius: 50%;
-          box-shadow: var(--shadow-sm);
-          color: var(--color-gray-400);
+          background: #fff;
+          padding: 7px; border-radius: 50%;
+          box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+          color: #ddd;
+          z-index: 10;
+          display: flex;
+          transition: all 0.2s;
         }
-        .favorite-btn.active { color: var(--color-gold); background: white; }
+        .favorite-btn.active { color: #dc2626; transform: scale(1.1); }
+        .favorite-btn:hover { transform: scale(1.1); color: #dc2626; }
 
         .card-content {
-          padding: 1.25rem;
+          padding: 1.5rem;
           display: flex;
           flex-direction: column;
-          gap: 1rem;
+          gap: 1.25rem;
+          background: white;
         }
 
         .card-header {
@@ -318,17 +330,18 @@ const VehicleCard: React.FC<VehicleCardProps> = ({ vehicle, isFavorite, onToggle
         }
 
         .make-tag {
-          font-size: 0.65rem;
+          font-size: 0.7rem;
           font-weight: 800;
           color: var(--color-gold);
           text-transform: uppercase;
-          letter-spacing: 1.5px;
+          letter-spacing: 2px;
         }
         .card-header h3 {
-          font-size: 1.15rem;
+          font-size: 1.3rem;
           margin: 0.25rem 0 0;
-          color: var(--color-black);
+          color: #111111;
           text-transform: none;
+          font-weight: 800;
         }
 
         .price-container {
@@ -338,66 +351,77 @@ const VehicleCard: React.FC<VehicleCardProps> = ({ vehicle, isFavorite, onToggle
           flex-shrink: 0;
         }
         .old-price {
-          font-size: 0.75rem;
+          font-size: 0.8rem;
           text-decoration: line-through;
-          color: var(--color-gray-400);
+          color: #999;
         }
         .price {
-          color: var(--color-black);
-          font-weight: 800;
-          font-size: 1.15rem;
+          color: #111111;
+          font-weight: 900;
+          font-size: 1.4rem;
           white-space: nowrap;
         }
         .price.promo { color: #dc2626; }
 
         .specs-grid {
           display: grid;
-          grid-template-columns: repeat(4,1fr);
-          gap: 0.5rem;
-          border-top: 1px solid var(--color-gray-100);
-          padding-top: 0.75rem;
+          grid-template-columns: repeat(2,1fr);
+          gap: 0.85rem;
+          border-top: 1px solid #f0f0f0;
+          padding-top: 1.25rem;
         }
         .spec-item {
-          display: flex; flex-direction: column;
-          align-items: center; gap: 4px;
-          font-size: 0.7rem;
-          color: var(--color-gray-600);
+          display: flex; 
+          flex-direction: row;
+          align-items: center; 
+          gap: 10px;
+          font-size: 0.85rem;
+          color: #666;
         }
-        .spec-item span { font-weight: 700; color: var(--color-black); }
+        .spec-item svg { color: var(--color-gold); flex-shrink: 0; }
+        .spec-item span { font-weight: 700; color: #111; }
 
         .card-actions {
           display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 0.5rem;
+          grid-template-columns: 1fr;
+          gap: 0.75rem;
+          margin-top: 0.5rem;
         }
 
         .contact-seller-btn {
           display: flex; align-items: center; justify-content: center;
-          gap: 6px;
-          padding: 0.75rem 0.5rem;
+          gap: 8px;
+          padding: 1rem;
           background: #25D366;
           color: white;
-          font-weight: 700;
+          font-weight: 800;
           border-radius: 8px;
-          font-size: 0.75rem;
+          font-size: 0.9rem;
           transition: all 0.2s;
+          box-shadow: 0 4px 12px rgba(37,211,102,0.2);
         }
-        .contact-seller-btn:hover { background: #1ebe5d; }
+        .contact-seller-btn:hover { 
+          transform: translateY(-2px);
+          box-shadow: 0 6px 15px rgba(37,211,102,0.3);
+          background: #1fab50;
+        }
 
         .view-details-btn {
           display: flex; align-items: center; justify-content: center;
-          gap: 6px;
-          padding: 0.75rem 0.5rem;
-          background: var(--color-gray-100);
-          color: var(--color-black);
-          font-weight: 700;
+          gap: 8px;
+          padding: 1rem;
+          background: #f8f9fa;
+          color: #111;
+          font-weight: 800;
           border-radius: 8px;
-          font-size: 0.75rem;
+          font-size: 0.9rem;
           transition: all 0.2s;
+          border: 1px solid #eee;
         }
-        .vehicle-card:hover .view-details-btn {
-          background: var(--color-black);
-          color: var(--color-white);
+        .view-details-btn:hover {
+          background: #111;
+          color: white;
+          border-color: #111;
         }
 
         /* Seller Modal */

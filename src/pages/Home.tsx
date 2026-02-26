@@ -3,7 +3,7 @@ import { supabase } from '../services/supabase';
 import { useNavigate } from 'react-router-dom';
 import type { Vehicle } from '../types';
 import VehicleCard from '../components/VehicleCard';
-import { ChevronRight, Award, Zap, Shield } from 'lucide-react';
+import { ChevronRight, Award, Zap, Shield, Star, Quote } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const Home: React.FC = () => {
@@ -12,6 +12,57 @@ const Home: React.FC = () => {
   const [promoVehicles, setPromoVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
   const [favorites, setFavorites] = useState<string[]>([]);
+
+  const testimonials = [
+    {
+      id: 1,
+      name: "João Pedro Santos",
+      role: "Empresário",
+      photo: "https://randomuser.me/api/portraits/men/32.jpg",
+      text: "Fiquei impressionado com a transparência da New Car. Comprei meu Corolla 2024 e o atendimento do Garrafinha foi nota 10. Recomendo a todos!",
+      rating: 5
+    },
+    {
+      id: 2,
+      name: "Maria Oliveira",
+      role: "Advogada",
+      photo: "https://randomuser.me/api/portraits/women/44.jpg",
+      text: "A melhor experiência que já tive em uma concessionária. O processo de financiamento foi extremamente rápido e saí de carro novo no mesmo dia.",
+      rating: 5
+    },
+    {
+      id: 3,
+      name: "Ricardo Mendes",
+      role: "Engenheiro",
+      photo: "https://randomuser.me/api/portraits/men/85.jpg",
+      text: "Avaliaram meu seminovo de forma muito justa. A parceria na New Car é real, o negócio é transparente do começo ao fim. Parabéns pela loja!",
+      rating: 5
+    },
+    {
+      id: 4,
+      name: "Ana Beatriz Costa",
+      role: "Médica",
+      photo: "https://randomuser.me/api/portraits/women/65.jpg",
+      text: "Excelente atendimento e carros impecáveis. Comprei minha Hilux SW4 e estou muito satisfeita com o suporte pós-venda da equipe.",
+      rating: 5
+    },
+    {
+      id: 5,
+      name: "Lucas Ferreira",
+      role: "Comerciante",
+      photo: "https://randomuser.me/api/portraits/men/22.jpg",
+      text: "Já sou cliente fiel da New Car. É a terceira troca que faço com eles e a qualidade dos veículos nunca decepciona. Confiança total.",
+      rating: 5
+    },
+    {
+      id: 6,
+      name: "Carla Silveira",
+      role: "Arquiteta",
+      photo: "https://randomuser.me/api/portraits/women/28.jpg",
+      text: "Design da loja é lindo e os carros são de altíssimo nível. O atendimento humanizado faz toda a diferença na hora de fechar negócio.",
+      rating: 5
+    }
+  ];
   const [showWppChat, setShowWppChat] = useState(false);
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
@@ -398,6 +449,43 @@ const Home: React.FC = () => {
             <p>Aprovação de crédito em até 30 minutos com as melhores taxas.</p>
           </motion.div>
         </motion.div>
+      </section>
+
+      {/* Testimonials Section */}
+      <section className="testimonials-section">
+        <div className="section-title-wrapper">
+          <div className="section-badge"><Star size={24} /> Depoimentos</div>
+          <p style={{ color: '#888' }}>O que nossos clientes dizem sobre a experiência New Car</p>
+        </div>
+
+        <div className="testimonials-slider-container">
+          <div className="testimonials-slider-track">
+            {[...testimonials, ...testimonials].map((t, idx) => (
+              <motion.div 
+                key={`${t.id}-${idx}`}
+                className="testimonial-card"
+                whileHover={{ y: -10, scale: 1.02 }}
+              >
+                <div className="quote-icon">
+                  <Quote size={24} />
+                </div>
+                <div className="rating-stars">
+                  {[...Array(t.rating)].map((_, i) => (
+                    <Star key={i} size={16} fill="var(--color-gold)" color="var(--color-gold)" />
+                  ))}
+                </div>
+                <p className="testimonial-text">"{t.text}"</p>
+                <div className="testimonial-user">
+                  <img src={t.photo} alt={t.name} className="user-photo" />
+                  <div className="user-info">
+                    <strong>{t.name}</strong>
+                    <span>{t.role}</span>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
       </section>
 
 
@@ -796,6 +884,133 @@ const Home: React.FC = () => {
           display: flex;
           justify-content: center;
           margin-top: 4rem;
+        }
+
+        /* Testimonials Styles */
+        .testimonials-section {
+          padding: 6rem 0;
+          background: #0a0a0a;
+          overflow: hidden;
+        }
+
+        .testimonials-slider-container {
+          width: 100%;
+          padding: 3rem 0;
+          overflow: hidden;
+          position: relative;
+        }
+
+        .testimonials-slider-container::before,
+        .testimonials-slider-container::after {
+          content: "";
+          position: absolute;
+          top: 0;
+          width: 150px;
+          height: 100%;
+          z-index: 2;
+          pointer-events: none;
+        }
+
+        .testimonials-slider-container::before {
+          left: 0;
+          background: linear-gradient(to right, #0a0a0a, transparent);
+        }
+
+        .testimonials-slider-container::after {
+          right: 0;
+          background: linear-gradient(to left, #0a0a0a, transparent);
+        }
+
+        .testimonials-slider-track {
+          display: flex;
+          width: max-content;
+          gap: 2rem;
+          padding: 0 1rem;
+          animation: testimonial-marquee 40s linear infinite;
+        }
+
+        .testimonials-slider-track:hover {
+          animation-play-state: paused;
+        }
+
+        @keyframes testimonial-marquee {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(calc(-50% - 1rem)); }
+        }
+
+        .testimonial-card {
+          background: #161616;
+          border: 1px solid #222;
+          border-radius: 20px;
+          padding: 2.5rem;
+          width: 380px;
+          flex-shrink: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 1.5rem;
+          position: relative;
+          transition: var(--transition-normal);
+        }
+
+        .testimonial-card:hover {
+          border-color: var(--color-gold);
+          background: #1c1c1c;
+        }
+
+        .quote-icon {
+          color: var(--color-gold);
+          opacity: 0.5;
+        }
+
+        .rating-stars {
+          display: flex;
+          gap: 4px;
+        }
+
+        .testimonial-text {
+          font-style: italic;
+          line-height: 1.7;
+          color: #ccc;
+          font-size: 1rem;
+          flex-grow: 1;
+        }
+
+        .testimonial-user {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+          border-top: 1px solid #222;
+          padding-top: 1.5rem;
+        }
+
+        .user-photo {
+          width: 50px;
+          height: 50px;
+          border-radius: 50%;
+          object-fit: cover;
+          border: 2px solid var(--color-gold);
+        }
+
+        .user-info {
+          display: flex;
+          flex-direction: column;
+        }
+
+        .user-info strong {
+          color: white;
+          font-size: 1rem;
+        }
+
+        .user-info span {
+          color: #666;
+          font-size: 0.8rem;
+        }
+
+        @media (max-width: 768px) {
+          .testimonial-card {
+            width: 300px;
+            padding: 1.5rem;
+          }
         }
 
         @keyframes pulse {

@@ -27,7 +27,7 @@ const Contact: React.FC = () => {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="contact-info-cards"
           >
-            <div className="info-card glass-card">
+            <div className="info-card solid-card">
               <div className="info-icon">
                 <MessageCircle size={32} />
               </div>
@@ -40,7 +40,7 @@ const Contact: React.FC = () => {
               </div>
             </div>
 
-            <div className="info-card glass-card">
+            <div className="info-card solid-card">
               <div className="info-icon">
                 <Phone size={32} />
               </div>
@@ -53,7 +53,7 @@ const Contact: React.FC = () => {
               </div>
             </div>
 
-            <div className="info-card glass-card">
+            <div className="info-card solid-card">
               <div className="info-icon">
                 <Mail size={32} />
               </div>
@@ -66,7 +66,7 @@ const Contact: React.FC = () => {
               </div>
             </div>
 
-            <div className="info-card glass-card">
+            <div className="info-card solid-card">
               <div className="info-icon">
                 <Instagram size={32} />
               </div>
@@ -85,7 +85,7 @@ const Contact: React.FC = () => {
             initial={{ opacity: 0, x: 30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
-            className="map-card glass-card"
+            className="map-card solid-card"
           >
             <div className="map-header">
               <MapPin size={24} className="text-gold" />
@@ -180,17 +180,25 @@ const Contact: React.FC = () => {
           gap: 1.5rem;
         }
 
+        .solid-card {
+          background: #111111;
+          border: 1px solid #222;
+          border-radius: 12px;
+          box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
         .info-card {
           display: flex;
           align-items: center;
           gap: 1.5rem;
-          padding: 1.5rem;
+          padding: 2rem;
           transition: var(--transition-normal);
         }
 
         .info-card:hover {
-          transform: translateY(-5px);
+          transform: scale(1.02);
           border-color: var(--color-gold);
+          background: #161616;
         }
 
         .info-icon {
