@@ -519,8 +519,7 @@ const Home: React.FC = () => {
             align-items: center;
           }
           .hero-badge.modern {
-            margin-bottom: 1rem;
-            padding: 0.4rem 1.2rem;
+            display: none;
           }
           .premium-button.large, .premium-button-outline.large {
             width: 100%;
