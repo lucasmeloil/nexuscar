@@ -43,11 +43,11 @@ const AdminDashboard: React.FC = () => {
       const [vehiclesRes, profilesRes, salesRes] = await Promise.all([
         supabase.from('vehicles').select('*', { count: 'exact', head: true }).eq('status', 'available'),
         supabase.from('profiles').select('*', { count: 'exact', head: true }).in('role', ['admin', 'seller']),
-        supabase.from('sales').select('price').eq('status', 'completed')
+        supabase.from('sales').select('sale_price')
       ]);
 
       const soldVehicles = salesRes.data || [];
-      const totalRevenue = soldVehicles.reduce((sum: number, s: any) => sum + (s.price || 0), 0);
+      const totalRevenue = soldVehicles.reduce((sum: number, s: any) => sum + (Number(s.sale_price) || 0), 0);
 
       setStats({
         totalSales: soldVehicles.length,

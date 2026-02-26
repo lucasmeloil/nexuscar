@@ -31,24 +31,35 @@ function App() {
   useEffect(() => {
     let mounted = true;
 
-    // Uma única verificação inicial - rápida e sem conflito
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (!mounted) return;
-      if (session?.user) {
-        const { data } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
-        if (mounted && data) setProfile(data);
+    const checkSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!mounted) return;
+
+        if (session?.user) {
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+          
+          if (mounted && data) setProfile(data);
+          if (error) console.error("Erro ao carregar perfil inicial:", error);
+        }
+      } catch (err) {
+        console.error("Erro na verificação de sessão:", err);
+      } finally {
+        if (mounted) setLoading(false);
       }
-      if (mounted) setLoading(false);
-    });
+    };
+
+    checkSession();
 
     // Listener para mudanças de estado (login/logout em tempo real)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return;
-      if (event === 'SIGNED_IN' && session?.user) {
+      
+      if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session?.user) {
         const { data } = await supabase
           .from('profiles')
           .select('*')
@@ -60,10 +71,10 @@ function App() {
       }
     });
 
-    // Fallback para evitar que a tela de carregamento fique presa infinitamente
+    // Fallback de segurança para garantir que a UI não trave
     const timeout = setTimeout(() => {
-      if (mounted) setLoading(false);
-    }, 5000);
+      if (mounted && loading) setLoading(false);
+    }, 4000);
 
     return () => {
       mounted = false;

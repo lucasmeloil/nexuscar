@@ -21,39 +21,89 @@ const Home: React.FC = () => {
   useEffect(() => {
     fetchData();
     fetchFavorites();
+
+    // Configuração do Realtime para sincronização em tempo real
+    const channel = supabase
+      .channel('vehicles-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'vehicles' },
+        () => {
+          console.log('Dados atualizados no banco, recarregando...');
+          fetchData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchData = async () => {
     try {
       setLoading(true);
       
-      const initialTimeout = setTimeout(() => {
-        if (loading) setLoading(false);
-      }, 7000);
+      // Fallback timeout para não travar a UI
+      const timer = setTimeout(() => {
+        setLoading(false);
+      }, 5000);
 
-      const [featuredRes, latestRes, promoRes] = await Promise.all([
-        supabase.from('vehicles').select('*').eq('is_featured', true).eq('status', 'available').limit(6),
-        supabase.from('vehicles').select('*').eq('status', 'available').order('created_at', { ascending: false }).limit(3),
-        supabase.from('vehicles').select('*').eq('is_promotion', true).eq('status', 'available').limit(3)
+      // Buscas independentes para maior resiliência
+      const fetchFeatured = async () => {
+        const { data, error } = await supabase
+          .from('vehicles')
+          .select('*')
+          .eq('status', 'available')
+          .eq('is_featured', true)
+          .limit(6);
+        
+        if (error) throw error;
+        
+        if (data && data.length > 0) {
+          setFeaturedVehicles(data);
+        } else {
+          // Fallback se não houver destaques marcados
+          const { data: fallback } = await supabase
+            .from('vehicles')
+            .select('*')
+            .eq('status', 'available')
+            .limit(3);
+          if (fallback) setFeaturedVehicles(fallback);
+        }
+      };
+
+      const fetchLatest = async () => {
+        const { data, error } = await supabase
+          .from('vehicles')
+          .select('*')
+          .eq('status', 'available')
+          .order('created_at', { ascending: false })
+          .limit(3);
+        if (error) throw error;
+        if (data) setLatestVehicles(data);
+      };
+
+      const fetchPromo = async () => {
+        const { data, error } = await supabase
+          .from('vehicles')
+          .select('*')
+          .eq('status', 'available')
+          .eq('is_promotion', true)
+          .limit(3);
+        if (error) throw error;
+        if (data) setPromoVehicles(data);
+      };
+
+      await Promise.allSettled([
+        fetchFeatured(),
+        fetchLatest(),
+        fetchPromo()
       ]);
 
-      clearTimeout(initialTimeout);
-
-      if (featuredRes.error) console.error('Featured error:', featuredRes.error);
-      if (latestRes.error) console.error('Latest error:', latestRes.error);
-      if (promoRes.error) console.error('Promos error:', promoRes.error);
-
-      if (featuredRes.data) setFeaturedVehicles(featuredRes.data);
-      if (latestRes.data) setLatestVehicles(latestRes.data);
-      if (promoRes.data) setPromoVehicles(promoRes.data);
-
-      if ((!featuredRes.data || featuredRes.data.length === 0) && !featuredRes.error) {
-        // Fallback if no featured
-        const { data: fallback } = await supabase.from('vehicles').select('*').eq('status', 'available').limit(3);
-        if (fallback) setFeaturedVehicles(fallback);
-      }
+      clearTimeout(timer);
     } catch (err) {
-      console.error('Error fetching home data:', err);
+      console.error('Erro na integração Supabase:', err);
     } finally {
       setLoading(false);
     }
