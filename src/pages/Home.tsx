@@ -219,7 +219,7 @@ const Home: React.FC = () => {
       >
         <div className="section-title-wrapper">
           <div className="section-badge"><Award size={16} /> Destaques</div>
-          <h2>Veículos em Destaque</h2>
+          <h2 style={{ color: '#ffffff', textShadow: '2px 2px 0px #b8860b', fontWeight: 900 }}>VEÍCULOS EM DESTAQUE</h2>
           <div className="title-underline"></div>
           <p>A melhor seleção de carros premium para você</p>
         </div>
@@ -269,7 +269,7 @@ const Home: React.FC = () => {
       >
         <div className="section-title-wrapper">
           <div className="section-badge"><Zap size={16} /> Novidades</div>
-          <h2>Recém Chegados</h2>
+          <h2 style={{ color: '#000', textShadow: '2px 2px 0px #b8860b', fontWeight: 900 }}>VEICULOS RECEM CHEGADOS</h2>
           <div className="title-underline"></div>
           <p>As últimas adições ao nosso estoque exclusivo</p>
         </div>
